@@ -12,6 +12,9 @@ BH1750 lightMeter(0x23);
 TFT_eSprite sprite = TFT_eSprite(&M5.Lcd);
 
 float lux;
+double ev;
+tuple<float, string> settings;
+bool stop_flag = false;
 const int device_iso = 400;
 
 const std::map<float, float> device_av = {
@@ -22,7 +25,8 @@ const std::map<float, float> device_av = {
     {5, 5.6},
     {6, 8},
     {7, 11},
-    {8, 16}};
+    {8, 16},
+};
 
 const std::map<int, string> device_tv = {
     {0, "1"},
@@ -34,7 +38,8 @@ const std::map<int, string> device_tv = {
     {6, "1/60"},
     {7, "1/125"},
     {8, "1/250"},
-    {9, "1/500"}};
+    {9, "1/500"},
+};
 
 const std::map<int, tuple<float, string>> program_line = {
     {5, {1.8, "1/8"}}, // 本当は4.7
@@ -72,15 +77,24 @@ tuple<float, string> findSettings(double ev)
 
   if (rounded_ev <= minEv)
   {
-    settings = {get<0>(program_line.at(minEv)), get<1>(program_line.at(minEv))};
+    settings = {
+        get<0>(program_line.at(minEv)),
+        get<1>(program_line.at(minEv)),
+    };
   }
   else if (rounded_ev >= maxEv)
   {
-    settings = {get<0>(program_line.at(maxEv)), get<1>(program_line.at(maxEv))};
+    settings = {
+        get<0>(program_line.at(maxEv)),
+        get<1>(program_line.at(maxEv)),
+    };
   }
   else
   {
-    settings = {get<0>(program_line.at(rounded_ev)), get<1>(program_line.at(rounded_ev))};
+    settings = {
+        get<0>(program_line.at(rounded_ev)),
+        get<1>(program_line.at(rounded_ev)),
+    };
   }
 
   return settings;
@@ -89,7 +103,7 @@ tuple<float, string> findSettings(double ev)
 void setup()
 {
   M5.begin();
-  M5.Axp.ScreenBreath(10);
+  M5.Axp.ScreenBreath(8);
   M5.Lcd.setRotation(1);
   M5.Lcd.setSwapBytes(false);
   M5.Lcd.setTextSize(2);
@@ -105,35 +119,54 @@ void setup()
   lightMeter.begin();
   lux = lightMeter.readLightLevel();
   M5.Lcd.println("Sensor activated");
-  delay(500);
+  delay(300);
 }
 
 void loop()
 {
   sprite.fillScreen(BLACK);
   sprite.setCursor(0, 0);
-  sprite.println("Looping");
+  sprite.setTextSize(2);
+
+  M5.update();
+  if (M5.BtnA.wasPressed() && !stop_flag)
+  {
+    stop_flag = true;
+  }
+  else if (M5.BtnA.wasPressed() && stop_flag)
+  {
+    stop_flag = false;
+  }
+
+  if (stop_flag)
+  {
+    sprite.println("Stoped");
+  }
+  else
+  {
+    lux = lightMeter.readLightLevel();
+    ev = calcEV(lux);
+    settings = findSettings(ev);
+
+    sprite.println("Looping");
+  }
 
   sprite.print("ISO ");
   sprite.println(device_iso);
 
-  lux = lightMeter.readLightLevel();
   sprite.print(lux);
   sprite.println(" lx");
 
-  double ev = calcEV(lux);
   sprite.print(ev);
   sprite.println(" EV");
 
-  tuple<float, string> settings = findSettings(ev);
   sprite.setTextSize(3);
   sprite.print("F ");
   sprite.println(get<0>(settings));
   sprite.print(get<1>(settings).c_str());
   sprite.println(" s");
 
-  sprite.setTextSize(2);
   sprite.pushSprite(0, 0);
 
-  delay(500);
+  delay(300);
 }
