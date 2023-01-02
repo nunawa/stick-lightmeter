@@ -56,6 +56,22 @@ const std::map<int, tuple<float, string>> program_line = {
     {16, {11, "1/500"}},
 };
 
+void setBrightness(float lux)
+{
+  if (lux < 100)
+  {
+    M5.Axp.ScreenBreath(8);
+  }
+  else if (100 <= lux < 1000)
+  {
+    M5.Axp.ScreenBreath(9);
+  }
+  else if (1000 <= lux)
+  {
+    M5.Axp.ScreenBreath(10);
+  }
+}
+
 double calcEV(float lux)
 {
   double n = 0.32;
@@ -140,11 +156,14 @@ void loop()
 
   if (stop_flag)
   {
+    setBrightness(lightMeter.readLightLevel());
+
     sprite.println("Stoped");
   }
   else
   {
     lux = lightMeter.readLightLevel();
+    setBrightness(lux);
     ev = calcEV(lux);
     settings = findSettings(ev);
 
