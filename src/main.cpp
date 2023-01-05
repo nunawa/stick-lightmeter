@@ -62,7 +62,7 @@ void setBrightness(float lux)
   {
     M5.Axp.ScreenBreath(8);
   }
-  else if (100 <= lux < 1000)
+  else if (100 <= lux && lux < 1000)
   {
     M5.Axp.ScreenBreath(9);
   }
@@ -86,23 +86,23 @@ double calcEV(float lux)
 tuple<float, string> findSettings(double ev)
 {
   int rounded_ev = (int)round(ev);
-  int minEv = program_line.begin()->first;
-  int maxEv = program_line.rbegin()->first;
+  int min_ev = program_line.begin()->first;
+  int max_ev = program_line.rbegin()->first;
 
   tuple<float, string> settings;
 
-  if (rounded_ev <= minEv)
+  if (rounded_ev <= min_ev)
   {
     settings = {
-        get<0>(program_line.at(minEv)),
-        get<1>(program_line.at(minEv)),
+        get<0>(program_line.at(min_ev)),
+        get<1>(program_line.at(min_ev)),
     };
   }
-  else if (rounded_ev >= maxEv)
+  else if (rounded_ev >= max_ev)
   {
     settings = {
-        get<0>(program_line.at(maxEv)),
-        get<1>(program_line.at(maxEv)),
+        get<0>(program_line.at(max_ev)),
+        get<1>(program_line.at(max_ev)),
     };
   }
   else
